@@ -11,9 +11,9 @@
     <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
         :root {
-            --color-green: #bbf7d0;
-            --color-green-border: #16a34a;
-            --color-green-hover: #86efac;
+            --color-green: #286140;
+            --color-green-border: #286140;
+            --color-green-hover: #1f4a2f;
             --color-yellow: #fef08a;
             --color-yellow-border: #ca8a04;
             --color-yellow-hover: #fde047;
@@ -79,7 +79,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: #dc2626;
+            background: #286140;
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 9999px;
@@ -204,6 +204,15 @@
             display: none;
             transform: translate(15px, -50%);
         }
+        
+        .tooltip.has-button {
+            pointer-events: auto;
+            transform: translate(15px, -100%);
+        }
+        
+        .tooltip.locked {
+            position: fixed !important;
+        }
 
         .tooltip.show {
             display: block;
@@ -224,6 +233,30 @@
             font-size: 0.75rem;
             color: #94a3b8;
             margin-top: 0.25rem;
+        }
+        
+        .tooltip-button {
+            margin-top: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: #286140;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'Transducer', Arial, sans-serif;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .tooltip-button:hover {
+            background: #1f4a2f;
+            transform: translateY(-1px);
         }
 
         /* Details Panel */
@@ -554,7 +587,9 @@
             <div class="tooltip-title" id="tooltipTitle"></div>
             <div class="tooltip-text" id="tooltipText"></div>
             <div class="tooltip-status" id="tooltipStatus"></div>
+            <a href="#quote" class="tooltip-button" id="tooltipButton" style="display: none;">Get a quote</a>
         </div>
+        
 
         <!-- Selected State Details Panel -->
         <div class="details-panel" id="detailsPanel">
@@ -673,33 +708,66 @@
             DC: 'District of Columbia'
         };
 
-        // Generate inventory with random availability (0-10) for all states
-        // Mix: some with 0, some with 1, some with 2+
-        const inventory = {};
-        Object.keys(stateNames).forEach(function(code, index) {
-            let available;
-            // Create a mix: ~10% with 0, ~30% with 1, ~60% with 2-10
-            const rand = Math.random();
-            if (rand < 0.1) {
-                available = 0; // 10% fully booked
-            } else if (rand < 0.4) {
-                available = 1; // 30% last unit
-            } else {
-                available = randomInt(2, 10); // 60% with 2-10 units
-            }
-            
-            const total = available + randomInt(0, 5); // Total is at least available, up to 5 more
-            inventory[code] = {
-                name: stateNames[code],
-                available: available,
-                total: total,
-                nextAvailable: available > 0 ? 'Now' : 'May ' + randomInt(10, 30),
-                activity: randomActivity()
-            };
-        });
+        // Fixed inventory with specific availability for each state
+        const inventory = {
+            AL: { name: 'Alabama', available: 2, total: 5, nextAvailable: 'Now', activity: '3 viewing' },
+            AK: { name: 'Alaska', available: 0, total: 2, nextAvailable: 'May 25', activity: '1 viewing' },
+            AZ: { name: 'Arizona', available: 5, total: 8, nextAvailable: 'Now', activity: '7 viewing' },
+            AR: { name: 'Arkansas', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            CA: { name: 'California', available: 1, total: 12, nextAvailable: 'Now', activity: '12 viewing' },
+            CO: { name: 'Colorado', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            CT: { name: 'Connecticut', available: 1, total: 4, nextAvailable: 'Now', activity: '4 viewing' },
+            DE: { name: 'Delaware', available: 0, total: 2, nextAvailable: 'May 20', activity: '1 viewing' },
+            DC: { name: 'District of Columbia', available: 0, total: 1, nextAvailable: 'May 28', activity: '0 viewing' },
+            FL: { name: 'Florida', available: 6, total: 10, nextAvailable: 'Now', activity: '9 viewing' },
+            GA: { name: 'Georgia', available: 4, total: 7, nextAvailable: 'Now', activity: '6 viewing' },
+            HI: { name: 'Hawaii', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            ID: { name: 'Idaho', available: 2, total: 4, nextAvailable: 'Now', activity: '3 viewing' },
+            IL: { name: 'Illinois', available: 0, total: 5, nextAvailable: 'May 22', activity: '3 viewing' },
+            IN: { name: 'Indiana', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            IA: { name: 'Iowa', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            KS: { name: 'Kansas', available: 2, total: 4, nextAvailable: 'Now', activity: '3 viewing' },
+            KY: { name: 'Kentucky', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            LA: { name: 'Louisiana', available: 0, total: 4, nextAvailable: 'May 18', activity: '2 viewing' },
+            ME: { name: 'Maine', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' },
+            MD: { name: 'Maryland', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            MA: { name: 'Massachusetts', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            MI: { name: 'Michigan', available: 4, total: 7, nextAvailable: 'Now', activity: '6 viewing' },
+            MN: { name: 'Minnesota', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            MS: { name: 'Mississippi', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            MO: { name: 'Missouri', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            MT: { name: 'Montana', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            NE: { name: 'Nebraska', available: 1, total: 3, nextAvailable: 'Now', activity: '2 viewing' },
+            NV: { name: 'Nevada', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            NH: { name: 'New Hampshire', available: 0, total: 2, nextAvailable: 'May 24', activity: '1 viewing' },
+            NJ: { name: 'New Jersey', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            NM: { name: 'New Mexico', available: 2, total: 4, nextAvailable: 'Now', activity: '3 viewing' },
+            NY: { name: 'New York', available: 7, total: 11, nextAvailable: 'Now', activity: '10 viewing' },
+            NC: { name: 'North Carolina', available: 4, total: 7, nextAvailable: 'Now', activity: '6 viewing' },
+            ND: { name: 'North Dakota', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' },
+            OH: { name: 'Ohio', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            OK: { name: 'Oklahoma', available: 2, total: 4, nextAvailable: 'Now', activity: '3 viewing' },
+            OR: { name: 'Oregon', available: 1, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            PA: { name: 'Pennsylvania', available: 0, total: 5, nextAvailable: 'May 21', activity: '3 viewing' },
+            RI: { name: 'Rhode Island', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' },
+            SC: { name: 'South Carolina', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            SD: { name: 'South Dakota', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' },
+            TN: { name: 'Tennessee', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            TX: { name: 'Texas', available: 9, total: 14, nextAvailable: 'Now', activity: '11 viewing' },
+            UT: { name: 'Utah', available: 2, total: 4, nextAvailable: 'Now', activity: '3 viewing' },
+            VT: { name: 'Vermont', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' },
+            VA: { name: 'Virginia', available: 3, total: 6, nextAvailable: 'Now', activity: '5 viewing' },
+            WA: { name: 'Washington', available: 4, total: 7, nextAvailable: 'Now', activity: '6 viewing' },
+            WV: { name: 'West Virginia', available: 0, total: 2, nextAvailable: 'May 26', activity: '1 viewing' },
+            WI: { name: 'Wisconsin', available: 2, total: 5, nextAvailable: 'Now', activity: '4 viewing' },
+            WY: { name: 'Wyoming', available: 1, total: 2, nextAvailable: 'Now', activity: '1 viewing' }
+        };
 
         // State
         let hoveredState = null;
+        let tooltipLocked = false;
+        let lockedTooltipX = null;
+        let lockedTooltipY = null;
 
         // DOM Elements
         const mapSvg = d3.select('#us-map');
@@ -712,7 +780,7 @@
         function getStateColor(stateCode) {
             const state = inventory[stateCode];
             if (!state) return '#cccccc';
-            if (state.available >= 2) return '#4ade80'; // Darker green
+            if (state.available >= 2) return '#286140'; // Green (#286140)
             if (state.available === 1) return '#fbbf24'; // Darker yellow/amber
             if (state.available === 0) return '#f87171'; // Darker red
             return '#cccccc';
@@ -721,7 +789,7 @@
         function getStateBorderColor(stateCode) {
             const state = inventory[stateCode];
             if (!state) return '#666666';
-            if (state.available >= 2) return '#22c55e'; // Darker green border
+            if (state.available >= 2) return '#286140'; // Green border (same as fill)
             if (state.available === 1) return '#f59e0b'; // Darker yellow border
             if (state.available === 0) return '#ef4444'; // Darker red border
             return '#666666';
@@ -730,14 +798,14 @@
         function getStateHoverColor(stateCode) {
             const state = inventory[stateCode];
             if (!state) return '#d1d5db';
-            if (state.available >= 2) return '#86efac';
+            if (state.available >= 2) return '#1f4a2f'; // Darker green on hover
             if (state.available === 1) return '#fde047';
             if (state.available === 0) return '#f87171';
             return '#d1d5db';
         }
 
         function getStatusBadge(state) {
-            if (state.available >= 2) return { text: 'Available', color: '#16a34a' };
+            if (state.available >= 2) return { text: 'Available', color: '#286140' };
             if (state.available === 1) return { text: 'Last Unit!', color: '#ca8a04' };
             return { text: 'Fully Booked', color: '#dc2626' };
         }
@@ -840,19 +908,7 @@
                     const color = getStateColor(stateCode);
                     return color;
                 })
-                .attr('stroke', function(d) {
-                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
-                    // Try to match by name if needed
-                    if (!inventory[stateCode] && stateCode.length > 2) {
-                        for (let code in inventory) {
-                            if (inventory[code].name === stateCode) {
-                                stateCode = code;
-                                break;
-                            }
-                        }
-                    }
-                    return getStateBorderColor(stateCode);
-                })
+                .attr('stroke', '#000000')
                 .attr('stroke-width', 1.5)
                 .on('mouseenter', function(event, d) {
                     let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
@@ -882,27 +938,85 @@
                     document.getElementById('tooltipTitle').textContent = state.name;
                     document.getElementById('tooltipText').textContent = `${state.available} units available`;
                     document.getElementById('tooltipStatus').textContent = badge.text;
+                    
+                    // Show/hide quote button based on availability
+                    const tooltipButton = document.getElementById('tooltipButton');
+                    if (state.available > 0) {
+                        tooltipButton.style.display = 'block';
+                        tooltip.classList.add('has-button', 'locked');
+                        tooltipButton.setAttribute('data-state-code', stateCode);
+                        // Lock position when button is visible - use state centroid, not mouse
+                        tooltipLocked = true;
+                        // Position relative to state center, not mouse - calculate once and lock
+                        const centroid = path.centroid(d);
+                        const svgRect = mapSvg.node().getBoundingClientRect();
+                        lockedTooltipX = svgRect.left + centroid[0] + 15;
+                        lockedTooltipY = svgRect.top + centroid[1] - 5;
+                        tooltip.style.left = lockedTooltipX + 'px';
+                        tooltip.style.top = lockedTooltipY + 'px';
+                        tooltip.style.position = 'fixed';
+                    } else {
+                        tooltipButton.style.display = 'none';
+                        tooltip.classList.remove('has-button', 'locked');
+                        tooltipLocked = false;
+                        lockedTooltipX = null;
+                        lockedTooltipY = null;
+                        // For states without button, follow mouse
+                        tooltip.style.left = (event.clientX + 15) + 'px';
+                        tooltip.style.top = (event.clientY - 5) + 'px';
+                    }
                 })
                 .on('mousemove', function(event) {
-                    tooltip.style.left = (event.clientX + 15) + 'px';
-                    tooltip.style.top = (event.clientY - 5) + 'px';
+                    // CRITICAL: If locked, restore locked position and exit immediately
+                    if (tooltipLocked && lockedTooltipX !== null && lockedTooltipY !== null) {
+                        tooltip.style.left = lockedTooltipX + 'px';
+                        tooltip.style.top = lockedTooltipY + 'px';
+                        return; // Exit early - don't process any further
+                    }
+                    // Only update position if tooltip is NOT locked (no button)
+                    if (!tooltipLocked) {
+                        tooltip.style.left = (event.clientX + 15) + 'px';
+                        tooltip.style.top = (event.clientY - 5) + 'px';
+                    }
                 })
                 .on('mouseleave', function(event, d) {
-                    hoveredState = null;
-                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
-                    // Try to match by name if needed
-                    if (!inventory[stateCode] && stateCode.length > 2) {
-                        for (let code in inventory) {
-                            if (inventory[code].name === stateCode) {
-                                stateCode = code;
-                                break;
+                    // If tooltip has a button, DON'T hide it - let tooltip's own mouseleave handle it
+                    const tooltipButton = document.getElementById('tooltipButton');
+                    if (tooltipButton && tooltipButton.style.display === 'block') {
+                        // Just reset state color, keep tooltip visible
+                        let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                        if (!inventory[stateCode] && stateCode.length > 2) {
+                            for (let code in inventory) {
+                                if (inventory[code].name === stateCode) {
+                                    stateCode = code;
+                                    break;
+                                }
                             }
                         }
+                        d3.select(this)
+                            .attr('fill', getStateColor(stateCode))
+                            .attr('stroke-width', 1.5);
+                        // Don't hide tooltip - it will hide when mouse leaves tooltip itself
+                    } else {
+                        // No button, hide immediately
+                        hoveredState = null;
+                        tooltipLocked = false;
+                        lockedTooltipX = null;
+                        lockedTooltipY = null;
+                        let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                        if (!inventory[stateCode] && stateCode.length > 2) {
+                            for (let code in inventory) {
+                                if (inventory[code].name === stateCode) {
+                                    stateCode = code;
+                                    break;
+                                }
+                            }
+                        }
+                        d3.select(this)
+                            .attr('fill', getStateColor(stateCode))
+                            .attr('stroke-width', 1.5);
+                        tooltip.classList.remove('show', 'has-button', 'locked');
                     }
-                    d3.select(this)
-                        .attr('fill', getStateColor(stateCode))
-                        .attr('stroke-width', 1.5);
-                    tooltip.classList.remove('show');
                 })
 
             // Add state labels (2-letter codes)
@@ -1020,9 +1134,43 @@
         });
 
 
+        // Function to show quote modal with state pre-filled
+        function showQuoteModal(stateCode) {
+            const state = inventory[stateCode];
+            if (!state) return;
+            
+            document.getElementById('quoteTitle').textContent = `🎉 Good news! ${state.available} unit(s) available in ${state.name}`;
+            document.getElementById('quoteWarning').textContent = `👀 ${state.activity.replace('viewing', 'other prospects viewing')} ${state.name} this week`;
+            quoteModal.classList.add('show');
+        }
+
         // Event listeners
         document.getElementById('closeDetails').addEventListener('click', function() {
             detailsPanel.classList.remove('show');
+        });
+        
+        // Tooltip button click handler - scrolls to quote form
+        document.getElementById('tooltipButton').addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Smooth scroll to quote section
+            const quoteSection = document.getElementById('quote');
+            if (quoteSection) {
+                quoteSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+        
+        // Keep tooltip visible when mouse enters it
+        tooltip.addEventListener('mouseenter', function() {
+            // Tooltip stays visible when hovering over it
+        });
+        
+        // Hide tooltip when mouse leaves it
+        tooltip.addEventListener('mouseleave', function() {
+            this.classList.remove('show', 'has-button', 'locked');
+            tooltipLocked = false;
+            lockedTooltipX = null;
+            lockedTooltipY = null;
+            hoveredState = null;
         });
 
         document.getElementById('quoteForm').addEventListener('submit', function(e) {
