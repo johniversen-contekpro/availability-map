@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30' Mobile Kitchen Availability - Mobile Culinaire</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+        :root {
+            --color-green: #bbf7d0;
+            --color-green-border: #16a34a;
+            --color-green-hover: #86efac;
+            --color-yellow: #fef08a;
+            --color-yellow-border: #ca8a04;
+            --color-yellow-hover: #fde047;
+            --color-red: #fecaca;
+            --color-red-border: #dc2626;
+            --color-red-hover: #f87171;
+            --color-amber: #f59e0b;
+            --color-slate: #1e293b;
+            --color-slate-light: #64748b;
+            --bg-page: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Transducer', Arial, sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #1e293b;
+            background: var(--bg-page);
+            margin: 0;
+            padding: 0;
+        }
+        
+        * {
+            font-family: 'Transducer', Arial, sans-serif;
+        }
+
+        .tracker-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+
+        html.iframe-embedded .tracker-container {
+            padding: 2.5rem 1.5rem;
+        }
+
+        @media (max-width: 767px) {
+            html.iframe-embedded .tracker-container {
+                padding: 2rem 1rem 1rem 1rem;
+            }
+        }
+
+        /* Header */
+        .header-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #dc2626;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .header-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: #314254;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 1.125rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .legend-label {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        #us-map {
+            width: 100%;
+            height: 600px;
+            background: #f8fafc;
+            display: block;
+            overflow: visible;
+        }
+        
+        #us-map text {
+            opacity: 1 !important;
+            visibility: visible !important;
+            fill: #000000 !important;
+        }
+        
+        #us-map text {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .state-path {
+            cursor: default;
+            transition: all 0.2s ease;
+            stroke-width: 1;
+        }
+
+        .state-path.last-unit {
+            animation: statePulse 2s ease-in-out infinite;
+        }
+
+        .state-path.selected {
+            stroke: #1e293b;
+            stroke-width: 3;
+        }
+
+        .state-label {
+            pointer-events: none !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            fill: #1e293b !important;
+            font-family: 'Transducer', Arial, sans-serif !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .state-count {
+            pointer-events: none;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            fill: #64748b !important;
+            font-family: 'Transducer', Arial, sans-serif !important;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            pointer-events: none;
+            border: 2px solid;
+            min-width: 200px;
+            display: none;
+            transform: translate(15px, -50%);
+        }
+
+        .tooltip.show {
+            display: block;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .tooltip-text {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .tooltip-status {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        /* Details Panel */
+        .details-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .details-panel.show {
+            display: block;
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .details-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-item-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Bottom CTA */
+        .bottom-cta {
+            background: #1e293b;
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .bottom-cta-text {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-overlay.dark {
+            background: #1e293b;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-radius: 16px 16px 0 0;
+            color: white;
+        }
+
+        .modal-header.green {
+            background: #16a34a;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-warning {
+            padding: 1rem 1.5rem;
+            border-left: 4px solid #ca8a04;
+            background: #fef08a;
+        }
+
+        .modal-warning-text {
+            font-size: 0.875rem;
+            color: #92400e;
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-button {
+            width: 100%;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            font-family: inherit;
+        }
+
+        .form-footer {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-align: center;
+            margin: 0;
+        }
+
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .benefits-list li {
+            padding: 0.5rem 0;
+            font-size: 1rem;
+            color: #475569;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes statePulse {
+            0%, 100% { 
+                stroke-width: 1;
+                opacity: 1;
+            }
+            50% { 
+                stroke-width: 2.5;
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 767px) {
+            .tracker-container {
+                padding: 2.5rem 1rem 1.5rem 1rem;
+            }
+
+            .header-title {
+                font-size: 1.75rem;
+            }
+
+            .header-subtitle {
+                font-size: 1rem;
+            }
+
+            .map-container {
+                padding: 1rem;
+            }
+
+            .details-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tracker-container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="live-badge">
+                <span>🔴</span>
+                <span>Live Inventory • Updated Daily</span>
+            </div>
+            
+            <h1 class="header-title">30' Mobile Kitchen Availability</h1>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-green); border-color: var(--color-green-border);"></div>
+                    <span class="legend-label">Available (2+)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-yellow); border-color: var(--color-yellow-border);"></div>
+                    <span class="legend-label">Last Unit!</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-red); border-color: var(--color-red-border);"></div>
+                    <span class="legend-label">Fully Booked</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <svg id="us-map" viewBox="0 0 960 600" style="width: 100%; height: auto; display: block;"></svg>
+        </div>
+
+        <!-- Tooltip -->
+        <div class="tooltip" id="tooltip">
+            <div class="tooltip-title" id="tooltipTitle"></div>
+            <div class="tooltip-text" id="tooltipText"></div>
+            <div class="tooltip-status" id="tooltipStatus"></div>
+        </div>
+
+        <!-- Selected State Details Panel -->
+        <div class="details-panel" id="detailsPanel">
+            <div class="details-header">
+                <div>
+                    <h2 class="details-title" id="detailsTitle"></h2>
+                    <span class="status-badge" id="statusBadge"></span>
+                </div>
+                <button class="close-btn" id="closeDetails" aria-label="Close">×</button>
+            </div>
+            
+            <div class="details-grid">
+                <div>
+                    <div class="detail-item-label">Units Available</div>
+                    <div class="detail-item-value" id="detailAvailable"></div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Next Available</div>
+                    <div class="detail-item-value" id="detailNext"></div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Activity</div>
+                    <div class="detail-item-value" id="detailActivity"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quote Request Modal -->
+    <div class="modal-overlay" id="quoteModal">
+        <div class="modal">
+            <div class="modal-header green">
+                <h3 class="modal-title" id="quoteTitle"></h3>
+            </div>
+            
+            <div class="modal-warning">
+                <p class="modal-warning-text" id="quoteWarning"></p>
+            </div>
+            
+            <form class="modal-body" id="quoteForm">
+                <div class="form-group">
+                    <label class="form-label" for="propertyName">Property Name</label>
+                    <input type="text" id="propertyName" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="startDate">Preferred Start Date</label>
+                    <input type="date" id="startDate" class="form-input" required>
+                </div>
+                
+                <button type="submit" class="form-button">Get My Quote →</button>
+                
+                <p class="form-footer">Response within 24 hours • No obligation</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Priority Hold Modal -->
+    <div class="modal-overlay dark" id="priorityModal">
+        <div class="modal">
+            <div class="modal-body">
+                <h3 class="modal-title" style="color: #1e293b; margin-bottom: 1rem;" id="priorityTitle"></h3>
+                
+                <ul class="benefits-list">
+                    <li>✅ Unit reserved for 24 hours</li>
+                    <li>✅ Callback within 2 hours</li>
+                    <li>✅ No deposit required</li>
+                </ul>
+                
+                <form id="priorityForm">
+                    <div class="form-group">
+                        <label class="form-label" for="priorityName">Name</label>
+                        <input type="text" id="priorityName" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="priorityPhone">Phone</label>
+                        <input type="tel" id="priorityPhone" class="form-input" required>
+                    </div>
+                    
+                    <button type="submit" class="form-button">Secure My 24h Hold →</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to generate random number between min and max (inclusive)
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Generate random activity count
+        function randomActivity() {
+            return randomInt(0, 20) + ' viewing';
+        }
+
+        // State names
+        const stateNames = {
+            AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+            CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+            HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+            KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+            MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri',
+            MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
+            NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio',
+            OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+            SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont',
+            VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+            DC: 'District of Columbia'
+        };
+
+        // Generate inventory with random availability (0-10) for all states
+        // Mix: some with 0, some with 1, some with 2+
+        const inventory = {};
+        Object.keys(stateNames).forEach(function(code, index) {
+            let available;
+            // Create a mix: ~10% with 0, ~30% with 1, ~60% with 2-10
+            const rand = Math.random();
+            if (rand < 0.1) {
+                available = 0; // 10% fully booked
+            } else if (rand < 0.4) {
+                available = 1; // 30% last unit
+            } else {
+                available = randomInt(2, 10); // 60% with 2-10 units
+            }
+            
+            const total = available + randomInt(0, 5); // Total is at least available, up to 5 more
+            inventory[code] = {
+                name: stateNames[code],
+                available: available,
+                total: total,
+                nextAvailable: available > 0 ? 'Now' : 'May ' + randomInt(10, 30),
+                activity: randomActivity()
+            };
+        });
+
+        // State
+        let hoveredState = null;
+
+        // DOM Elements
+        const mapSvg = d3.select('#us-map');
+        const tooltip = document.getElementById('tooltip');
+        const detailsPanel = document.getElementById('detailsPanel');
+        const quoteModal = document.getElementById('quoteModal');
+        const priorityModal = document.getElementById('priorityModal');
+
+        // Color functions - using darker, more visible colors
+        function getStateColor(stateCode) {
+            const state = inventory[stateCode];
+            if (!state) return '#cccccc';
+            if (state.available >= 2) return '#4ade80'; // Darker green
+            if (state.available === 1) return '#fbbf24'; // Darker yellow/amber
+            if (state.available === 0) return '#f87171'; // Darker red
+            return '#cccccc';
+        }
+
+        function getStateBorderColor(stateCode) {
+            const state = inventory[stateCode];
+            if (!state) return '#666666';
+            if (state.available >= 2) return '#22c55e'; // Darker green border
+            if (state.available === 1) return '#f59e0b'; // Darker yellow border
+            if (state.available === 0) return '#ef4444'; // Darker red border
+            return '#666666';
+        }
+
+        function getStateHoverColor(stateCode) {
+            const state = inventory[stateCode];
+            if (!state) return '#d1d5db';
+            if (state.available >= 2) return '#86efac';
+            if (state.available === 1) return '#fde047';
+            if (state.available === 0) return '#f87171';
+            return '#d1d5db';
+        }
+
+        function getStatusBadge(state) {
+            if (state.available >= 2) return { text: 'Available', color: '#16a34a' };
+            if (state.available === 1) return { text: 'Last Unit!', color: '#ca8a04' };
+            return { text: 'Fully Booked', color: '#dc2626' };
+        }
+
+        // Calculate stats (kept for potential future use, but not displayed)
+        function updateStats() {
+            // Stats calculation kept but not displayed
+        }
+
+        // Load and render map
+        d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(function(us) {
+            if (!us || !us.objects || !us.objects.states) {
+                console.error('Invalid map data structure');
+                document.getElementById('subtitle').textContent = 'Error: Invalid map data';
+                return;
+            }
+
+            const width = 960;
+            const height = 600;
+            
+            const path = d3.geoPath();
+            const projection = d3.geoAlbersUsa()
+                .scale(1300)
+                .translate([width / 2, height / 2]);
+            path.projection(projection);
+
+            const states = topojson.feature(us, us.objects.states);
+            
+            console.log('Map loaded successfully. States:', states.features.length);
+            console.log('First state FULL properties:', JSON.stringify(states.features[0].properties, null, 2));
+            console.log('All property keys in first state:', Object.keys(states.features[0].properties));
+            console.log('Sample inventory check - CA:', inventory['CA']);
+            console.log('Sample inventory check - TX:', inventory['TX']);
+            
+            // Find what property contains the state code
+            const firstState = states.features[0];
+            console.log('First state all properties:', firstState.properties);
+            
+            // Try to find the state code property
+            let stateCodeProperty = null;
+            const possibleProps = ['STUSPS', 'postal', 'NAME', 'name', 'id', 'STATE', 'state'];
+            for (let prop of possibleProps) {
+                if (firstState.properties[prop]) {
+                    console.log('Found property:', prop, '=', firstState.properties[prop]);
+                    if (firstState.properties[prop].length === 2 || prop === 'NAME') {
+                        stateCodeProperty = prop;
+                        break;
+                    }
+                }
+            }
+            
+            console.log('Using state code property:', stateCodeProperty);
+            
+            // Verify a few states match
+            states.features.slice(0, 10).forEach(function(f) {
+                const code = stateCodeProperty ? f.properties[stateCodeProperty] : (f.properties.STUSPS || f.properties.NAME);
+                const state = inventory[code];
+                console.log('State code from', stateCodeProperty || 'STUSPS/NAME', ':', code, 'Has inventory:', !!state, 'Available:', state ? state.available : 'N/A');
+            });
+
+            // Clear any existing paths
+            mapSvg.selectAll('*').remove();
+
+            // Draw states
+            const paths = mapSvg.selectAll('path.state')
+                .data(states.features)
+                .enter()
+                .append('path')
+                .attr('class', 'state-path')
+                .attr('d', path)
+                .attr('fill', function(d) {
+                    // Try multiple property names - check what actually exists
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    
+                    // If still no code, log all properties to find it
+                    if (!stateCode) {
+                        console.error('No state code found. All properties:', Object.keys(d.properties));
+                        return '#ff0000'; // Red to show missing data
+                    }
+                    
+                    // Try to match - maybe it's a full name, need to convert
+                    let state = inventory[stateCode];
+                    
+                    // If not found and it's a full name, try to find by name
+                    if (!state && stateCode.length > 2) {
+                        // It's probably a full name, find the code
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                state = inventory[code];
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!state) {
+                        console.warn('No inventory for:', stateCode, 'Available properties:', Object.keys(d.properties));
+                        return '#ff00ff'; // Magenta to show missing inventory
+                    }
+                    const color = getStateColor(stateCode);
+                    return color;
+                })
+                .attr('stroke', function(d) {
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    // Try to match by name if needed
+                    if (!inventory[stateCode] && stateCode.length > 2) {
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                break;
+                            }
+                        }
+                    }
+                    return getStateBorderColor(stateCode);
+                })
+                .attr('stroke-width', 1.5)
+                .on('mouseenter', function(event, d) {
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    let state = inventory[stateCode];
+                    // Try to match by name if needed
+                    if (!state && stateCode.length > 2) {
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                state = inventory[code];
+                                break;
+                            }
+                        }
+                    }
+                    if (!state) {
+                        return;
+                    }
+                    
+                    hoveredState = stateCode;
+                    d3.select(this)
+                        .attr('fill', getStateHoverColor(stateCode))
+                        .attr('stroke-width', 2.5);
+                    
+                    const badge = getStatusBadge(state);
+                    tooltip.classList.add('show');
+                    tooltip.style.borderColor = badge.color;
+                    document.getElementById('tooltipTitle').textContent = state.name;
+                    document.getElementById('tooltipText').textContent = `${state.available} units available`;
+                    document.getElementById('tooltipStatus').textContent = badge.text;
+                })
+                .on('mousemove', function(event) {
+                    tooltip.style.left = (event.clientX + 15) + 'px';
+                    tooltip.style.top = (event.clientY - 5) + 'px';
+                })
+                .on('mouseleave', function(event, d) {
+                    hoveredState = null;
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    // Try to match by name if needed
+                    if (!inventory[stateCode] && stateCode.length > 2) {
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                break;
+                            }
+                        }
+                    }
+                    d3.select(this)
+                        .attr('fill', getStateColor(stateCode))
+                        .attr('stroke-width', 1.5);
+                    tooltip.classList.remove('show');
+                })
+
+            // Add state labels (2-letter codes)
+            mapSvg.selectAll('text.state-label')
+                .data(states.features)
+                .enter()
+                .append('text')
+                .attr('class', 'state-label')
+                .attr('transform', function(d) {
+                    const centroid = path.centroid(d);
+                    // Get state code first
+                    let code = d.properties.STUSPS || d.properties.postal || d.properties.NAME || '';
+                    if (code.length > 2) {
+                        for (let invCode in inventory) {
+                            if (inventory[invCode].name === code) {
+                                code = invCode;
+                                break;
+                            }
+                        }
+                    }
+                    // Adjust for Alaska and Hawaii
+                    if (code === 'AK') {
+                        return `translate(-130, 25)`;
+                    } else if (code === 'HI') {
+                        return `translate(-110, 25)`;
+                    }
+                    return `translate(${centroid[0]}, ${centroid[1]})`;
+                })
+                .attr('text-anchor', 'middle')
+                .attr('dy', '0.35em')
+                .attr('fill', '#000000')
+                .attr('font-size', '18px')
+                .attr('font-weight', '700')
+                .attr('font-family', 'Transducer, Arial, sans-serif')
+                .style('pointer-events', 'none')
+                .style('user-select', 'none')
+                .style('opacity', '1')
+                .style('visibility', 'visible')
+                .text(function(d) {
+                    let code = d.properties.STUSPS || d.properties.postal || d.properties.NAME || '';
+                    // If it's a full name, get the 2-letter code from inventory
+                    if (code.length > 2) {
+                        for (let invCode in inventory) {
+                            if (inventory[invCode].name === code) {
+                                code = invCode;
+                                break;
+                            }
+                        }
+                    }
+                    console.log('Creating label for state:', code);
+                    return code;
+                });
+            
+            console.log('Total labels created:', mapSvg.selectAll('text.state-label').size());
+
+            // Add availability counts (below state code)
+            mapSvg.selectAll('text.state-count')
+                .data(states.features)
+                .enter()
+                .append('text')
+                .attr('class', 'state-count')
+                .attr('transform', function(d) {
+                    const centroid = path.centroid(d);
+                    const code = d.properties.STUSPS;
+                    if (code === 'AK') {
+                        return `translate(-130, 40)`;
+                    } else if (code === 'HI') {
+                        return `translate(-110, 40)`;
+                    }
+                    return `translate(${centroid[0]}, ${centroid[1] + 15})`;
+                })
+                .attr('text-anchor', 'middle')
+                .attr('dy', '0.35em')
+                .attr('fill', '#64748b')
+                .attr('font-size', '11px')
+                .attr('font-weight', '600')
+                .attr('font-family', 'Transducer, Arial, sans-serif')
+                .style('pointer-events', 'none')
+                .style('user-select', 'none')
+                .text(function(d) {
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    let state = inventory[stateCode];
+                    // Try to match by name if needed
+                    if (!state && stateCode.length > 2) {
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                state = inventory[code];
+                                break;
+                            }
+                        }
+                    }
+                    if (state) {
+                        return state.available;
+                    }
+                    return '';
+                });
+
+            updateStats();
+            console.log('Map rendered successfully');
+            console.log('Total paths drawn:', mapSvg.selectAll('path').size());
+            console.log('Total labels drawn:', mapSvg.selectAll('text.state-label').size());
+        }).catch(function(error) {
+            console.error('❌ ERROR loading map:', error);
+            console.error('Error details:', error.message, error.stack);
+            
+            // Show error message on page
+            mapSvg.append('text')
+                .attr('x', 480)
+                .attr('y', 300)
+                .attr('text-anchor', 'middle')
+                .attr('fill', 'red')
+                .attr('font-size', '20px')
+                .text('Failed to load map data. Check console for details.');
+        });
+
+
+        // Event listeners
+        document.getElementById('closeDetails').addEventListener('click', function() {
+            detailsPanel.classList.remove('show');
+        });
+
+        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            quoteModal.classList.remove('show');
+            priorityModal.classList.add('show');
+            // Get state from form or use a default
+            const stateName = document.getElementById('quoteTitle').textContent.match(/in ([A-Za-z\s]+)$/);
+            if (stateName) {
+                document.getElementById('priorityTitle').textContent = `⚡ Priority Reservation - 24h hold for ${stateName[1]}`;
+            }
+        });
+
+        document.getElementById('priorityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            priorityModal.classList.remove('show');
+            detailsPanel.classList.remove('show');
+            alert('Thank you! We\'ll contact you within 2 hours to secure your 24h hold.');
+        });
+
+        // Close modals on overlay click
+        quoteModal.addEventListener('click', function(e) {
+            if (e.target === quoteModal) {
+                quoteModal.classList.remove('show');
+            }
+        });
+
+        priorityModal.addEventListener('click', function(e) {
+            if (e.target === priorityModal) {
+                priorityModal.classList.remove('show');
+            }
+        });
+
+        // Simulate live viewer count updates
+        setInterval(function() {
+            Object.keys(inventory).forEach(function(key) {
+                const state = inventory[key];
+                if (state.available > 0) {
+                    const current = parseInt(state.activity.replace(/\D/g, '')) || 0;
+                    const change = Math.floor(Math.random() * 3) - 1;
+                    const newCount = Math.max(0, current + change);
+                    state.activity = `${newCount} viewing`;
+                }
+            });
+            updateStats();
+        }, 45000);
+
+        // Iframe resize functionality
+        function resizeIframe() {
+            if (window.parent !== window) {
+                document.documentElement.classList.add('iframe-embedded');
+                
+                function getExactHeight() {
+                    const container = document.querySelector('.tracker-container');
+                    if (container) {
+                        const rect = container.getBoundingClientRect();
+                        return Math.ceil(rect.bottom + 1);
+                    }
+                    return Math.ceil(document.body.scrollHeight);
+                }
+                
+                function sendHeight() {
+                    const height = getExactHeight();
+                    window.parent.postMessage({
+                        type: 'resize',
+                        height: height
+                    }, '*');
+                }
+                
+                const resizeObserver = new ResizeObserver(function() {
+                    sendHeight();
+                });
+
+                resizeObserver.observe(document.body);
+                if (document.querySelector('.tracker-container')) {
+                    resizeObserver.observe(document.querySelector('.tracker-container'));
+                }
+
+                setTimeout(sendHeight, 100);
+                setTimeout(sendHeight, 500);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', resizeIframe);
+        } else {
+            resizeIframe();
+        }
+    </script>
+</body>
+</html>
+
