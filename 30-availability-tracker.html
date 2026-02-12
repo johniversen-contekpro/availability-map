@@ -787,12 +787,8 @@
         }
 
         function getStateBorderColor(stateCode) {
-            const state = inventory[stateCode];
-            if (!state) return '#666666';
-            if (state.available >= 2) return '#286140'; // Green border (same as fill)
-            if (state.available === 1) return '#f59e0b'; // Darker yellow border
-            if (state.available === 0) return '#ef4444'; // Darker red border
-            return '#666666';
+            // All borders use the blue color
+            return '#314254';
         }
 
         function getStateHoverColor(stateCode) {
@@ -908,8 +904,22 @@
                     const color = getStateColor(stateCode);
                     return color;
                 })
-                .attr('stroke', '#000000')
-                .attr('stroke-width', 1.5)
+                .attr('stroke', function(d) {
+                    let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
+                    // If it's a full name, try to find the code
+                    if (!inventory[stateCode] && stateCode.length > 2) {
+                        for (let code in inventory) {
+                            if (inventory[code].name === stateCode) {
+                                stateCode = code;
+                                break;
+                            }
+                        }
+                    }
+                    return getStateBorderColor(stateCode);
+                })
+                .attr('stroke-width', 0.3)
+                .attr('stroke-linejoin', 'round')
+                .attr('stroke-linecap', 'round')
                 .on('mouseenter', function(event, d) {
                     let stateCode = d.properties.STUSPS || d.properties.postal || d.properties.NAME || d.properties.name;
                     let state = inventory[stateCode];
@@ -930,7 +940,7 @@
                     hoveredState = stateCode;
                     d3.select(this)
                         .attr('fill', getStateHoverColor(stateCode))
-                        .attr('stroke-width', 2.5);
+                        .attr('stroke-width', 0.5);
                     
                     const badge = getStatusBadge(state);
                     tooltip.classList.add('show');
@@ -995,7 +1005,7 @@
                         }
                         d3.select(this)
                             .attr('fill', getStateColor(stateCode))
-                            .attr('stroke-width', 1.5);
+                            .attr('stroke-width', 0.3);
                         // Don't hide tooltip - it will hide when mouse leaves tooltip itself
                     } else {
                         // No button, hide immediately
@@ -1014,7 +1024,7 @@
                         }
                         d3.select(this)
                             .attr('fill', getStateColor(stateCode))
-                            .attr('stroke-width', 1.5);
+                            .attr('stroke-width', 0.3);
                         tooltip.classList.remove('show', 'has-button', 'locked');
                     }
                 })
