@@ -25,7 +25,7 @@
             --color-amber: #f59e0b;
             --color-slate: #1e293b;
             --color-slate-light: #64748b;
-            --bg-page: #f8fafc;
+            --bg-page: #ffffff;
         }
 
         * {
@@ -59,9 +59,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 4rem 1.5rem;
-            background: white;
-            border-radius: 0;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            background: transparent;
         }
 
         html.iframe-embedded .tracker-container {
@@ -184,7 +182,7 @@
         #us-map {
             width: 100%;
             height: 600px;
-            background: #f8fafc;
+            background: #ffffff;
             display: block;
             overflow: visible;
         }
@@ -417,152 +415,6 @@
             transform: translateY(-2px);
         }
 
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 1rem;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal-overlay.dark {
-            background: #1e293b;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 16px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-radius: 16px 16px 0 0;
-            color: white;
-        }
-
-        .modal-header.green {
-            background: #16a34a;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .modal-warning {
-            padding: 1rem 1.5rem;
-            border-left: 4px solid #ca8a04;
-            background: #fef08a;
-        }
-
-        .modal-warning-text {
-            font-size: 0.875rem;
-            color: #92400e;
-            margin: 0;
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
-        }
-
-        .form-button {
-            width: 100%;
-            background: #f59e0b;
-            color: white;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            font-family: inherit;
-        }
-
-        .form-footer {
-            font-size: 0.75rem;
-            color: #64748b;
-            text-align: center;
-            margin: 0;
-        }
-
-        .quote-section {
-            margin-top: 2rem;
-            padding: 2rem 0 1rem;
-            border-top: 1px solid #e2e8f0;
-            scroll-margin-top: 1rem;
-        }
-
-        .quote-section-heading {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #314254;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .quote-section-intro {
-            font-size: 0.9375rem;
-            color: #64748b;
-            text-align: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .quote-section-form {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .benefits-list {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 2rem;
-        }
-
-        .benefits-list li {
-            padding: 0.5rem 0;
-            font-size: 1rem;
-            color: #475569;
-        }
-
         /* Animations */
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -682,61 +534,6 @@
             </div>
         </div>
 
-        <section id="quote" class="quote-section" aria-labelledby="quoteSectionHeading">
-            <h2 class="quote-section-heading" id="quoteSectionHeading">Request a quote</h2>
-            <p class="quote-section-intro" id="quoteContextLine" style="display: none;" aria-live="polite"></p>
-
-            <form id="quoteForm" class="quote-section-form">
-                <div class="form-group">
-                    <label class="form-label" for="propertyName">Property Name</label>
-                    <input type="text" id="propertyName" class="form-input" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="email">Email</label>
-                    <input type="email" id="email" class="form-input" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="startDate">Preferred Start Date</label>
-                    <input type="date" id="startDate" class="form-input" required>
-                </div>
-
-                <button type="submit" class="form-button">Get My Quote →</button>
-
-                <p class="form-footer">Response within 24 hours • No obligation</p>
-            </form>
-        </section>
-
-    </div>
-
-    <!-- Priority Hold Modal -->
-    <div class="modal-overlay dark" id="priorityModal">
-        <div class="modal">
-            <div class="modal-body">
-                <h3 class="modal-title" style="color: #1e293b; margin-bottom: 1rem;" id="priorityTitle"></h3>
-                
-                <ul class="benefits-list">
-                    <li>✅ Unit reserved for 24 hours</li>
-                    <li>✅ Callback within 2 hours</li>
-                    <li>✅ No deposit required</li>
-                </ul>
-                
-                <form id="priorityForm">
-                    <div class="form-group">
-                        <label class="form-label" for="priorityName">Name</label>
-                        <input type="text" id="priorityName" class="form-input" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="priorityPhone">Phone</label>
-                        <input type="tel" id="priorityPhone" class="form-input" required>
-                    </div>
-                    
-                    <button type="submit" class="form-button">Secure My 24h Hold →</button>
-                </form>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -781,7 +578,6 @@
         const mapSvg = d3.select('#us-map');
         const tooltip = document.getElementById('tooltip');
         const detailsPanel = document.getElementById('detailsPanel');
-        const priorityModal = document.getElementById('priorityModal');
 
         const COLOR_AVAILABLE = '#286140';
         const COLOR_AVAILABLE_HOVER = '#1f4a2f';
@@ -1111,36 +907,29 @@
         });
 
 
-        function setQuoteSectionState(stateName) {
-            const sec = document.getElementById('quote');
-            const line = document.getElementById('quoteContextLine');
-            if (!sec) return;
-            if (stateName) {
-                sec.dataset.stateName = stateName;
-                if (line) {
-                    line.textContent = "You're requesting a quote for " + stateName + '.';
-                    line.style.display = 'block';
-                }
-            } else {
-                delete sec.dataset.stateName;
-                if (line) {
-                    line.textContent = '';
-                    line.style.display = 'none';
-                }
-            }
-        }
-
         function scrollToQuoteSection() {
             const quoteSection = document.getElementById('quote');
             if (quoteSection) {
                 quoteSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (window.parent !== window) {
+                try {
+                    const parentQuote = window.parent.document.getElementById('quote');
+                    if (parentQuote) {
+                        parentQuote.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        return;
+                    }
+                } catch (err) {
+                    /* cross-origin parent */
+                }
+                window.parent.postMessage({ type: 'scrollToQuote', id: 'quote' }, '*');
             }
         }
 
         function showQuoteModal(stateCode) {
             const state = inventory[stateCode];
             if (!state || hasNoAvailability(stateCode)) return;
-            setQuoteSectionState(state.name);
             scrollToQuoteSection();
         }
 
@@ -1152,12 +941,6 @@
         document.getElementById('tooltipButton').addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            const code = this.getAttribute('data-state-code');
-            if (code && inventory[code] && !hasNoAvailability(code)) {
-                setQuoteSectionState(inventory[code].name);
-            } else {
-                setQuoteSectionState(null);
-            }
             scrollToQuoteSection();
         });
         
@@ -1177,31 +960,7 @@
 
         document.getElementById('headerQuoteButton').addEventListener('click', function(e) {
             e.preventDefault();
-            setQuoteSectionState(null);
             scrollToQuoteSection();
-        });
-
-        document.getElementById('quoteForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            priorityModal.classList.add('show');
-            const quoteSec = document.getElementById('quote');
-            const stateLabel = quoteSec && quoteSec.dataset.stateName ? quoteSec.dataset.stateName : '';
-            document.getElementById('priorityTitle').textContent = stateLabel
-                ? `⚡ Priority Reservation - 24h hold for ${stateLabel}`
-                : '⚡ Priority Reservation - 24h hold';
-        });
-
-        document.getElementById('priorityForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            priorityModal.classList.remove('show');
-            detailsPanel.classList.remove('show');
-            alert('Thank you! We\'ll contact you within 2 hours to secure your 24h hold.');
-        });
-
-        priorityModal.addEventListener('click', function(e) {
-            if (e.target === priorityModal) {
-                priorityModal.classList.remove('show');
-            }
         });
 
         // Iframe resize functionality
