@@ -537,6 +537,40 @@
     </div>
 
     <script>
+        /**
+         * Optional: force navigation to a single URL (rare). Leave '' for normal embeds.
+         * @see QUOTE_PAGE_URL
+         */
+        const QUOTE_PAGE_URL = '';
+
+        /**
+         * Which element ID to scroll to for "Get a quote" (default "quote").
+         * Product slug: optional ?slug= in iframe src, or parent sends setAvailabilityEmbedContext
+         * (see webflow-embed-code.html — parses /mobile-kitchens/{slug} from the live page URL).
+         */
+        const urlParams = new URLSearchParams(window.location.search);
+        let quoteSectionId = urlParams.get('quoteSectionId') || 'quote';
+        let productSlug = (urlParams.get('slug') || '').trim();
+
+        window.addEventListener('message', function (e) {
+            if (!e.data || typeof e.data !== 'object') return;
+            if (e.data.type === 'setAvailabilityEmbedContext') {
+                if (e.data.elementId) {
+                    quoteSectionId = String(e.data.elementId).replace(/^#/, '');
+                }
+                if (e.data.slug != null && String(e.data.slug).length > 0) {
+                    productSlug = String(e.data.slug).trim();
+                }
+                return;
+            }
+            if (e.data.type === 'setAvailabilityQuoteTarget' && e.data.elementId) {
+                quoteSectionId = String(e.data.elementId).replace(/^#/, '');
+            }
+            if (e.data.type === 'setAvailabilityProductSlug' && e.data.slug != null && String(e.data.slug).length > 0) {
+                productSlug = String(e.data.slug).trim();
+            }
+        });
+
         // State names
         const stateNames = {
             AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
@@ -908,14 +942,23 @@
 
 
         function scrollToQuoteSection() {
-            const quoteSection = document.getElementById('quote');
+            if (QUOTE_PAGE_URL) {
+                try {
+                    window.top.location.href = QUOTE_PAGE_URL;
+                } catch (err) {
+                    window.location.href = QUOTE_PAGE_URL;
+                }
+                return;
+            }
+
+            const quoteSection = document.getElementById(quoteSectionId);
             if (quoteSection) {
                 quoteSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 return;
             }
             if (window.parent !== window) {
                 try {
-                    const parentQuote = window.parent.document.getElementById('quote');
+                    const parentQuote = window.parent.document.getElementById(quoteSectionId);
                     if (parentQuote) {
                         parentQuote.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         return;
@@ -923,7 +966,9 @@
                 } catch (err) {
                     /* cross-origin parent */
                 }
-                window.parent.postMessage({ type: 'scrollToQuote', id: 'quote' }, '*');
+                const scrollPayload = { type: 'scrollToQuote', id: quoteSectionId };
+                if (productSlug) scrollPayload.slug = productSlug;
+                window.parent.postMessage(scrollPayload, '*');
             }
         }
 
